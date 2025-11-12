@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const Zservice = require('../service/categoriesService');
+const service = require('../service/categoriesService');
 
 /**
  * @swagger
@@ -21,7 +21,7 @@ const Zservice = require('../service/categoriesService');
  *                 type: object
  *                 properties:
  *                   id:
- *                     type: number
+ *                     type: string
  *                   name:
  *                     type: string
  *                   description:
@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
  *         required: true
  *         description: ID de la categoría
  *         schema:
- *           type: number
+ *           type: string
  *     responses:
  *       200:
  *         description: Categoría encontrada
@@ -61,7 +61,7 @@ router.get('/', async (req, res) => {
  *               type: object
  *               properties:
  *                 id:
- *                   type: number
+ *                   type: string
  *                 name:
  *                   type: string
  *                 description:
@@ -74,7 +74,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const response = await service.getById(parseInt(id, 10));
+    const response = await service.getById(id);
     res.status(200).json(response);
   } catch (error) {
     res.status(404).json({ error: error.message });
@@ -134,7 +134,7 @@ router.post('/', async (req, res) => {
  *         required: true
  *         description: ID de la categoría a actualizar
  *         schema:
- *           type: number
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -160,7 +160,7 @@ router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const response = await service.update(parseInt(id, 10), data);
+    const response = await service.update(id, data);
     res.status(200).json(response);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -180,7 +180,7 @@ router.patch('/:id', async (req, res) => {
  *         required: true
  *         description: ID de la categoría a eliminar
  *         schema:
- *           type: number
+ *           type: string
  *     responses:
  *       200:
  *         description: Categoría eliminada correctamente
@@ -192,7 +192,7 @@ router.patch('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const response = await service.delete(parseInt(id, 10));
+    const response = await service.delete(id, 10);
     res.status(200).json(response);
   } catch (error) {
     const statusCode = error.message.includes('en uso') ? 400 : 404;
