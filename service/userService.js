@@ -1,66 +1,52 @@
-const { fakerDE: faker } = require('@faker-js/faker');
-const { users } = require('../mock/mockData');
+const User = require('../models/Users');
 
-class UserService {
-  constructor() {
-    this.users = [];
-    this.generate();
+class UsersService {
+  //Obtener todos
+  async getAll() {
+    const users = await User.find();
+    if (!users.length) throw new Error('No hay usuarios registrados');
+    return users;
   }
 
-  // GENERATE -> Generar usuarios
-  generate() {
-    this.users = users;
-  }
-
-  // GET -> Obtener todos los usuarios
-  getAll() {
-    if (this.users.length < 1) throw new Error('Usuarios No Encontrados');
-    return this.users;
-  }
-
-  // GET -> Obtener usuario por id
-  getById(id) {
-    const user = this.users.find((u) => u.id == id);
-    if (!user) throw new Error('Usuario No Encontrado');
+  //Obtener por ID
+  async getById(id) {
+    const user = await User.findById(id);
+    if (!user) throw new Error('Usuario no encontrado');
     return user;
   }
 
-  // POST -> Crear un nuevo usuario
-  create(data) {
-    if (!data.name || !data.username || !data.password)
-      throw new Error('Faltan Campos');
+  //Crear
+  async create(data) {
+    const { name, username, password } = data;
+    if (!name || !username || !password)
+      throw new Error('Faltan campos requeridos');
 
-    const newUser = {
-      id: this.users.at(-1).id + 1,
-      ...data,
-    };
-    this.users.push(newUser);
+    // Validar que el username no esté repetido
+    const existingUser = await User.findOne({ username });
+    if (existingUser) throw new Error('El nombre de usuario ya existe');
 
+    const newUser = new User({ name, username, password });
+    await newUser.save();
     return newUser;
   }
 
-  // PATCH -> Actualizar un usuario
-  update(id, data) {
-    const index = this.users.findIndex((i) => i.id == id);
-    if (index === -1) throw new Error('Usuario No Encontrado');
-    const user = this.users[index];
+  //Actualizar
+  async update(id, data) {
+    const user = await User.findById(id);
+    if (!user) throw new Error('Usuario no encontrado');
 
-    this.users[index] = {
-      ...user,
-      ...data,
-    };
-
-    return this.users[index];
+    const updatedUser = await User.findByIdAndUpdate(id, data, { new: true });
+    return updatedUser;
   }
 
-  // DELETE -> Eliminar un usuario
-  delete(id) {
-    const user = this.users.find((u) => u.id == id);
-    if (!user) throw new Error('Usuario No Encontrado');
+  //Eliminar
+  async delete(id) {
+    const user = await User.findById(id);
+    if (!user) throw new Error('Usuario no encontrado');
 
-    this.users = this.users.filter((c) => c.id != id);
+    await User.findByIdAndDelete(id);
     return user;
   }
 }
 
-module.exports = new UserService();
+module.exports = new UsersService();

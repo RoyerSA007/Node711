@@ -1,67 +1,195 @@
 const express = require('express');
 const router = express.Router();
+const service = require('../service/userService');
 
-const service = require('../service/userService')
-
-// GET -> Obtener todos los usuarios
-router.get('/', (req, res) => {
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: Obtener una lista de usuarios
+ *     tags:
+ *       - Users
+ *     responses:
+ *       200:
+ *         description: Lista de usuarios
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: number
+ *                   name:
+ *                     type: string
+ *                   username:
+ *                     type: string
+ *                   password:
+ *                     type: string
+ *       404:
+ *         description: Usuarios no encontrados
+ */
+router.get('/', async (req, res) => {
   try {
-    const response = service.getAll();
+    const response = await service.getAll();
     res.status(200).json(response);
   } catch (error) {
-    res.status(404).json({ error: error.message })
+    res.status(404).json({ error: error.message });
   }
 });
 
-// GET -> Obtener usuario por id
-router.get('/:id', (req, res) => {
+/**
+ * @swagger
+ * /users/{id}:
+ *   get:
+ *     summary: Obtener un usuario por ID
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del usuario
+ *         schema:
+ *           type: number
+ *     responses:
+ *       200:
+ *         description: Usuario encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                 name:
+ *                   type: string
+ *                 username:
+ *                   type: string
+ *       404:
+ *         description: Usuario no encontrado
+ */
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const response = service.getById(id);
+    const response = await service.getById(parseInt(id, 10));
     res.status(200).json(response);
   } catch (error) {
-    res.status(404).json({ error: error.message })
+    res.status(404).json({ error: error.message });
   }
 });
 
-// POST -> Crear un nuevo usuario
-router.post('/', (req, res) => {
+/**
+ * @swagger
+ * /users:
+ *   post:
+ *     summary: Crea un nuevo usuario
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - username
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Usuario creado correctamente
+ *       400:
+ *         description: Faltan campos requeridos
+ */
+router.post('/', async (req, res) => {
   try {
     const data = req.body;
-    const response = service.create(data);
-    res.status(200).json(response);
+    const response = await service.create(data);
+    res.status(201).json(response);
   } catch (error) {
-    res.status(404).json({ error: error.message })
-  }
-})
-
-// PATCH -> Actualizar un usuario
-router.patch('/:id', (req, res) => {
-  try {
-    const { id } = req.params;
-    const data = req.body;
-    const response = service.update(id, data);
-    res.status(200).json(response);
-  } catch (error) {
-    res.status(404).json({ error: error.message })
+    res.status(400).json({ error: error.message });
   }
 });
 
-// DELETE -> Eliminar un usuario
-router.delete('/:id', (req, res) => {
+/**
+ * @swagger
+ * /users/{id}:
+ *   patch:
+ *     summary: Actualiza campos parciales de un usuario por ID
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del usuario a actualizar
+ *         schema:
+ *           type: number
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Usuario actualizado correctamente
+ *       404:
+ *         description: Usuario no encontrado
+ */
+router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const response = service.delete(id);
+    const data = req.body;
+    const response = await service.update(parseInt(id, 10), data);
     res.status(200).json(response);
   } catch (error) {
-    res.status(404).json({ error: error.message })
+    res.status(404).json({ error: error.message });
   }
-})
+});
+
+/**
+ * @swagger
+ * /users/{id}:
+ *   delete:
+ *     summary: Elimina un usuario por ID
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del usuario a eliminar
+ *         schema:
+ *           type: number
+ *     responses:
+ *       200:
+ *         description: Usuario eliminado correctamente
+ *       404:
+ *         description: Usuario no encontrado
+ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const response = await service.delete(parseInt(id, 10));
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(404).json({ error: error.message });
+  }
+});
 
 module.exports = router;
-
-// {
-//   "name": "Daniel",
-//   "username": "daniel123",
-//   "password": "1234"
-// }

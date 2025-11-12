@@ -1,65 +1,18 @@
-const express = require("express");
+const app = require('./app'); // Importamos la app configurada
+const { logError, errorHandler } = require('./middleware/errorHandler');
 const routerApi = require('./routes/rutas');
-const app = express();
-const port = 3000;
+const setupSwagger = require('./swagger');
 
-app.use(express.json());
-
-app.get('/', (req, res) => {
-  res.send("Holiii bienvenido a mi servidor en express");
-});
+const port = 4000;
 
 routerApi(app);
 
+app.use(logError);
+app.use(errorHandler);
+
+setupSwagger(app);
+
+// Iniciar servidor
 app.listen(port, () => {
-  console.log(`My server is working on http://localhost:${port}`);
+  console.log(`Servidor funcionando en http://localhost:${port}`);
 });
-
-// app.post('/', (req, res) => {
-//   const body = req.body;
-//   res.json({
-//     message: 'Created',
-//     data: body
-//   });
-// });
-
-// app.patch('/:id', (req, res) => {
-//   const { id } = req.params;
-//   const body = req.body;
-//   res.json({
-//     message: 'Updated',
-//     data: body,
-//     id
-//   });
-// });
-
-// app.delete('/:id', (req, res) => {
-//   const { id } = req.params;
-//   res.json({
-//     message: 'Deleted',
-//     id
-//   });
-// });
-
-
-// app.get('/nuevaruta', (req, res) => {
-//   res.send("Holii esta es mi nueva ruta");
-// });
-
-
-// ========================================================================================
-/* PARAMETROS TIPO RUTA
-api.example.com/task/{id}
-api.example.com/products/{id}
-*/
-
-// // Encapsular Id
-// app.get('/products/:id', (req, res) => {
-//   const {id} = req.params;
-//   // Buscar el producto por su ID
-//   res.json({
-//     id,
-//     name: 'Sabritas',
-//     price: 100
-//   });
-// });

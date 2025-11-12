@@ -1,103 +1,96 @@
-const { fakerDE: faker } = require('@faker-js/faker');
-const categoriesService = require('./categoriesService');
-const brandsService = require('./brandsService');
-const { products } = require('../mock/mockData');
+const Product = require('../models/Products');
+const Category = require('../models/Categories');
+const Brand = require('../models/Brands');
 
-// PRODUCTS SERVICE
 class ProductsService {
-  constructor() {
-      this.products = [];
-      this.generate();
+  // Obtener todos los productos
+  async getAll() {
+    const products = await Product.find().populate('categoryId').populate('brandId');
+    if (!products.length) throw new Error('No hay productos creados');
+    return products;
   }
 
-  // GENERATE -> Generar productos
-  generate() {
-    this.products = products;
-  }
-
-  // GET -> Obtener todos los productos
-  getAll() {
-    if (this.products.length < 1) throw new Error('No hay Productos Creados');
-    return this.products;
-  }
-
-  // GET -> Obtener producto por id
-  getById(id) {
-    const product = this.products.find(p => p.id == id);
-    if (!product) throw new Error('Producto No Encontrado');
+  // Obtener producto por ID
+  async getById(id) {
+    const product = await Product.findById(id).populate('categoryId').populate('brandId');
+    if (!product) throw new Error('Producto no encontrado');
     return product;
   }
 
-   // GET -> Obtener productos por id de categoría
-  getByCategory(categoryId) {
-    console.log("CategoriesService:", categoriesService);
+  async getByCategory(categoryId) {
+    const category = await Category.findById(categoryId);
+    if (!category) throw new Error('Categoría no encontrada');
 
-    const category = categoriesService.getAll().find(c => c.id == categoryId);
-    if (!category) throw new Error('Categoría No Encontrada');
-
-    const productsInCategory = this.products.filter(p => p.categoryId == category.id);
-    if (productsInCategory.length < 1) throw new Error('No Hay Productos en esta Categoría');
+    const productsInCategory = await Product.find({ categoryId }).populate('brandId');
+    if (!productsInCategory.length) throw new Error('No hay productos en esta categoría');
 
     return productsInCategory;
   }
 
-  // GET -> Obtener productos por id de marca
-  getByBrand(brandId) {
-    const brand = brandsService.getAll().find(b => b.id == brandId);
-    if (!brand) throw new Error('Marca No Encontrada');
+  async getByBrand(brandId) {
+    const brand = await Brand.findById(brandId);
+    if (!brand) throw new Error('Marca no encontrada');
 
-    const productsInBrand = this.products.filter(p => p.brandId == brand.id);
-    if (productsInBrand.length < 1) throw new Error('No Hay Productos en esta Marca');
+    const productsInBrand = await Product.find({ brandId }).populate('categoryId');
+    if (!productsInBrand.length) throw new Error('No hay productos en esta marca');
 
     return productsInBrand;
   }
 
-  // POST -> Crear un nuevo producto
-  create(data) {
-    if (!data.name || !data.description || !data.price || !data.stock || !data.categoryId || !data.brandId)
-      throw new Error('Faltan Campos');
+  async create(data) {
+    const { name, description, price, stock, categoryId, brandId } = data;
 
-    const category = categoriesService.getAll().find(c => c.id == data.categoryId);
-    const brand = brandsService.getAll().find(b => b.id == data.brandId);
+    // Validaciones
+    if (!name || !description || price == null || stock == null || !categoryId || !brandId)
+      throw new Error('Faltan campos');
 
-    if (!category) throw new Error('Categoría No Encontrada');
-    if (!brand) throw new Error('Marca No Encontrada');
+    if (isNaN(price) || isNaN(stock))
+      throw new Error('El precio y el stock deben ser numéricos');
 
-    const newProduct = { id: faker.string.uuid(), ...data }
-    this.products.push(newProduct);
+    // Verificar existencia de categoría y marca
+    const category = await Category.findById(categoryId);
+    const brand = await Brand.findById(brandId);
+    if (!category) throw new Error('Categoría no encontrada');
+    if (!brand) throw new Error('Marca no encontrada');
 
+    const newProduct = new Product({
+      name,
+      description,
+      price,
+      stock,
+      categoryId,
+      brandId
+    });
+
+    await newProduct.save();
     return newProduct;
   }
 
-  // PATCH -> Actualizar un producto
-  update(id, data) {
-    const index = this.products.findIndex(i => i.id == id);
-    if (index === -1) throw new Error('Producto No Encontrado');
-    const product = this.products[index];
+  async update(id, data) {
+    const product = await Product.findById(id);
+    if (!product) throw new Error('Producto no encontrado');
 
+    // Validar categoría o marca si se envían
     if (data.categoryId) {
-      const category = categoriesService.getAll().find(c => c.id == data.categoryId);
-      if (!category) throw new Error('Categoría No Encontrada');
+      const category = await Category.findById(data.categoryId);
+      if (!category) throw new Error('Categoría no encontrada');
     }
+
     if (data.brandId) {
-      const brand = brandsService.getAll().find(c => c.id == data.brandId);
-      if (!brand) throw new Error('Marca No Encontrada');
+      const brand = await Brand.findById(data.brandId);
+      if (!brand) throw new Error('Marca no encontrada');
     }
 
-    this.products[index] = {
-      ...product,
-      ...data
-    }
-
-    return this.products[index];
+    const updatedProduct = await Product.findByIdAndUpdate(id, data, { new: true });
+    return updatedProduct;
   }
 
-  // DELETE -> Eliminar un producto
-  delete(id) {
-    const product = this.products.find(p => p.id == id);
-    if (!product) throw new Error('Producto No Encontrado');
+  //Eliminar producto
+  async delete(id) {
+    const product = await Product.findById(id);
+    if (!product) throw new Error('Producto no encontrado');
 
-    this.products = this.products.filter(p => p.id != id);
+    await Product.findByIdAndDelete(id);
     return product;
   }
 }

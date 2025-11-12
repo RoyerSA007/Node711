@@ -1,77 +1,51 @@
-const { categories } = require('../mock/mockData');
-const { products } = require('../mock/mockData');
+const Category = require('../models/Categories');
+const Product = require('../models/Products');
 
 class CategoriesService {
-  constructor() {
-    this.categories = [];
-    this.generate();
+  // GET: todas las categorías
+  async getAll() {
+    const categories = await Category.find();
+    if (!categories.length) throw new Error('No hay categorías creadas');
+    return categories;
   }
 
-  // GENERATE -> Generar categorias
-  generate() {
-    this.categories = categories;
-  }
-
-  // GET -> Obtener todas las categorias
-  getAll() {
-    if (this.categories.length < 1)
-      throw new Error('No hay Categorías Creadas');
-    return this.categories;
-  }
-
-  // GET -> Obtener categoria por id
-  getById(id) {
-    const category = this.categories.find((c) => c.id == id);
-    if (!category) throw new Error('Categoria No Encontrada');
+  // GET: por ID
+  async getById(id) {
+    const category = await Category.findById(id);
+    if (!category) throw new Error('Categoría no encontrada');
     return category;
   }
 
-  // POST -> Crear una nueva categoria
-  create(data) {
+  // POST: crear nueva categoría
+  async create(data) {
     if (!data.name || !data.description || data.active == null)
-      throw new Error('Faltan Campos');
+      throw new Error('Faltan campos');
 
-    const newCategory = {
-      id: this.categories.at(-1).id + 1,
-      ...data,
-    };
-    this.categories.push(newCategory);
-
+    const newCategory = new Category(data);
+    await newCategory.save();
     return newCategory;
   }
 
-  // PATCH -> Actualizar una categoria
-  update(id, data) {
-    const index = this.categories.findIndex((i) => i.id == id);
-    if (index === -1) throw new Error('Categoria No Encontrada');
-    const category = this.categories[index];
-
+  // PATCH: actualizar categoría
+  async update(id, data) {
     if (data.active != null && typeof data.active !== 'boolean')
-      throw new Error('Active no es Booleano');
+      throw new Error('El campo "active" debe ser booleano');
 
-    const dataKeys = Object.keys(data);
-    const notPermitedKeys = dataKeys.filter(
-      (d) => d != 'name' && d != 'description' && d != 'active',
-    );
-    if (notPermitedKeys.length > 0) throw new Error('Parametros No Permitidos');
-
-    this.categories[index] = {
-      ...category,
-      ...data,
-    };
-
-    return this.categories[index];
+    const category = await Category.findByIdAndUpdate(id, data, { new: true });
+    if (!category) throw new Error('Categoría no encontrada');
+    return category;
   }
 
-  // DELETE -> Eliminar una categoria
-  delete(id) {
-    const category = this.categories.find((c) => c.id == id);
-    if (!category) throw new Error('Categoria No Encontrada');
+  // DELETE: eliminar categoría
+  async delete(id) {
+    const category = await Category.findById(id);
+    if (!category) throw new Error('Categoría no encontrada');
 
-    const productsInCategory = products.find((p) => p.categoryId == id);
-    if (productsInCategory) throw new Error('La Categoria está en uso');
+    // Verificar si hay productos usando esta categoría
+    const productsInCategory = await Product.findOne({ categoryId: id });
+    if (productsInCategory) throw new Error('La categoría está en uso');
 
-    this.categories = this.categories.filter((c) => c.id != id);
+    await Category.findByIdAndDelete(id);
     return category;
   }
 }
