@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
- 
+
 const service = require('../service/productService');
 
 /**
@@ -29,9 +29,9 @@ const service = require('../service/productService');
  *                   stock:
  *                     type: number
  *                   categoryId:
- *                     type: number
+ *                     type: string
  *                   brandId:
- *                     type: number
+ *                     type: string
  *       404:
  *         description: No hay Productos Creados
  */
@@ -57,7 +57,7 @@ router.get('/', async (req, res) => {
  *         required: true
  *         description: ID de la categoría
  *         schema:
- *           type: number
+ *           type: string
  *     responses:
  *       200:
  *         description: Lista de productos en la categoría
@@ -67,7 +67,7 @@ router.get('/', async (req, res) => {
 router.get('/category/:categoryId', async (req, res) => {
   try {
     const { categoryId } = req.params;
-    const response = await service.getByCategory(parseInt(categoryId, 10));
+    const response = await service.getByCategory(categoryId, 10);
     res.status(200).json(response);
   } catch (error) {
     res.status(404).json({ error: error.message });
@@ -126,7 +126,7 @@ router.get('/:id', async (req, res) => {
  *         required: true
  *         description: ID de la marca
  *         schema:
- *           type: number
+ *           type: string
  *     responses:
  *       200:
  *         description: Lista de productos de la marca
@@ -136,7 +136,7 @@ router.get('/:id', async (req, res) => {
 router.get('/brand/:brandId', async (req, res) => {
   try {
     const { brandId } = req.params;
-    const response = await service.getByBrand(parseInt(brandId, 10));
+    const response = await service.getByBrand(brandId, 10);
     res.status(200).json(response);
   } catch (error) {
     res.status(404).json({ error: error.message });
@@ -173,9 +173,9 @@ router.get('/brand/:brandId', async (req, res) => {
  *               stock:
  *                 type: number
  *               categoryId:
- *                 type: number
+ *                 type: string
  *               brandId:
- *                 type: number
+ *                 type: string
  *     responses:
  *       201:
  *         description: Producto Creado

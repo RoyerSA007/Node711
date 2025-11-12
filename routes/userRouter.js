@@ -20,7 +20,7 @@ const service = require('../service/userService');
  *                 type: object
  *                 properties:
  *                   id:
- *                     type: number
+ *                     type: string
  *                   name:
  *                     type: string
  *                   username:
@@ -52,7 +52,7 @@ router.get('/', async (req, res) => {
  *         required: true
  *         description: ID del usuario
  *         schema:
- *           type: number
+ *           type: string
  *     responses:
  *       200:
  *         description: Usuario encontrado
@@ -62,7 +62,7 @@ router.get('/', async (req, res) => {
  *               type: object
  *               properties:
  *                 id:
- *                   type: number
+ *                   type: string
  *                 name:
  *                   type: string
  *                 username:
@@ -73,7 +73,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const response = await service.getById(parseInt(id, 10));
+    const response = await service.getById(id, 10);
     res.status(200).json(response);
   } catch (error) {
     res.status(404).json({ error: error.message });
@@ -133,7 +133,7 @@ router.post('/', async (req, res) => {
  *         required: true
  *         description: ID del usuario a actualizar
  *         schema:
- *           type: number
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -155,7 +155,7 @@ router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const response = await service.update(parseInt(id, 10), data);
+    const response = await service.update(id, data);
     res.status(200).json(response);
   } catch (error) {
     res.status(404).json({ error: error.message });
@@ -175,7 +175,7 @@ router.patch('/:id', async (req, res) => {
  *         required: true
  *         description: ID del usuario a eliminar
  *         schema:
- *           type: number
+ *           type: string
  *     responses:
  *       200:
  *         description: Usuario eliminado correctamente
@@ -185,7 +185,7 @@ router.patch('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const response = await service.delete(parseInt(id, 10));
+    const response = await service.delete(id, 10);
     res.status(200).json(response);
   } catch (error) {
     res.status(404).json({ error: error.message });
